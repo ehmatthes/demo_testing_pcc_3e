@@ -11,11 +11,18 @@ from pathlib import Path
 from shlex import split
 import sys
 
+import pytest
 
-def test_basic_program():
+
+basic_programs = [
+    ('chapter_01/hello_world.py', 'Hello Python world!'),
+]
+
+@pytest.mark.parametrize('file_path, expected_output', basic_programs)
+def test_basic_program(file_path, expected_output):
     """Test a program that only prints output."""
     root_dir = Path(__file__).parents[1]
-    path = root_dir / "chapter_01" / "hello_world.py"
+    path = root_dir / file_path
 
     # Use the venv python.
     python_cmd = sys.prefix + "/bin/python"
@@ -27,4 +34,4 @@ def test_basic_program():
         capture_output=True, text=True, check=True)
     output = result.stdout.strip()
 
-    assert output == "Hello Python world!"
+    assert output == expected_output
