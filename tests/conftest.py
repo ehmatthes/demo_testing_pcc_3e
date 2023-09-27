@@ -1,6 +1,7 @@
 """conftest.py for tests/ directory."""
 
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -8,4 +9,9 @@ import pytest
 @pytest.fixture(scope='session')
 def python_cmd():
     """Return the path to the venv Python interpreter."""
-    return sys.prefix + "/bin/python"
+    if sys.platform == 'win32':
+        python_cmd = Path(sys.prefix) / 'Scripts/python.exe'
+    else:
+        python_cmd = Path(sys.prefix) / "bin/python"
+
+    return python_cmd.as_posix()
