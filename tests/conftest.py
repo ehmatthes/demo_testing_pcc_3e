@@ -1,17 +1,22 @@
 """conftest.py for tests/ directory."""
 
-import sys
-from pathlib import Path
-
 import pytest
+
+import utils
 
 
 @pytest.fixture(scope='session')
 def python_cmd():
     """Return the path to the venv Python interpreter."""
-    if sys.platform == 'win32':
-        python_cmd = Path(sys.prefix) / 'Scripts/python.exe'
-    else:
-        python_cmd = Path(sys.prefix) / "bin/python"
+    return utils.get_python_cmd()
 
-    return python_cmd.as_posix()
+
+def pytest_sessionfinish(session, exitstatus):
+    """Custom cleanup work."""
+
+    # Show which version of Python was used for tests.
+    python_cmd = utils.get_python_cmd()
+    cmd = f"{python_cmd} --version"
+    output = utils.run_command(cmd)
+
+    print(f"***** Tests were run with: {output}")
