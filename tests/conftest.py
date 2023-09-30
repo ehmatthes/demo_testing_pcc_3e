@@ -30,6 +30,7 @@ def pytest_sessionfinish(session, exitstatus):
     print("\n\n--- Resetting test venv ---\n")
 
     req_txt_path = Path(__file__).parents[1] / 'requirements.txt'
+    req_txt_path = req_txt_path.as_posix()
 
     cmd = f"{python_cmd} -m pip install -r {req_txt_path}"
     output = utils.run_command(cmd)
@@ -38,7 +39,7 @@ def pytest_sessionfinish(session, exitstatus):
         line for line in output.split('\n')
         if 'Requirement already satisfied' not in line
     ]
-    
+
     if changed_lines:
         for line in changed_lines:
             print(line)
