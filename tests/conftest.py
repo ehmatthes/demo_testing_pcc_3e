@@ -5,6 +5,14 @@ import pytest
 import utils
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--pygame-version", action="store",
+        default=None,
+        help="Pygame version to test"
+    )
+
+
 @pytest.fixture(scope='session')
 def python_cmd():
     """Return the path to the venv Python interpreter."""
@@ -19,4 +27,4 @@ def pytest_sessionfinish(session, exitstatus):
     cmd = f"{python_cmd} --version"
     output = utils.run_command(cmd)
 
-    print(f"***** Tests were run with: {output}")
+    print(f"\n***** Tests were run with: {output}")
