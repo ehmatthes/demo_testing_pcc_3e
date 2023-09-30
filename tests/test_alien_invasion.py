@@ -23,16 +23,15 @@ import pytest
 import utils
 
 
+# ----- Fixtures -----
+
 @pytest.fixture(scope='module', autouse=True)
 def check_pygame_version(request, python_cmd):
     """Check if the correct version of Pygame is installed."""
-    pygame_version = request.config.getoption("--pygame-version")
-    if pygame_version:
-        print(f"\n*** Installing pygame {pygame_version}\n")
+    utils.check_library_version(request, python_cmd, 'pygame')
 
-        cmd = f"{python_cmd} -m pip install pygame=={pygame_version}"
-        output = utils.run_command(cmd)
 
+# ----- Test functions -----
 
 def test_ai_game():
     """Test basic functionality of the game.
