@@ -45,7 +45,8 @@ def test_mpl_squares(tmp_path, python_cmd):
     print("\n***** mpl_squares output:", output_path)
 
     reference_filename = src_path.name.replace('.py', '.png')
-    reference_file_path = Path(__file__).parent / 'reference_files' / reference_filename
+    reference_file_path = (Path(__file__).parent
+            / 'reference_files' / reference_filename)
     assert filecmp.cmp(output_path, reference_file_path)
 
     # Verify text output.
