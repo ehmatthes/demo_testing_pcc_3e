@@ -22,6 +22,10 @@ import pytest
 
 import utils
 
+# Run this test last, because the Pygame window persists until the entire
+#  test suite finishes.
+pytestmark = pytest.mark.run(order=-1)
+
 
 # ----- Fixtures -----
 
