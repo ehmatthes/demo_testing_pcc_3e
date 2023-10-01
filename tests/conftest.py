@@ -33,7 +33,11 @@ def pytest_sessionfinish(session, exitstatus):
     req_txt_path = req_txt_path.as_posix()
 
     cmd = f"{python_cmd} -m pip install -r {req_txt_path}"
-    output = utils.run_command(cmd)
+    # When run in the context of a test run, pip is leaving behind
+    #   temp dirs on Windows that are causing errors.
+    # They don't prevent the work from being done. The are just
+    #   causing warnings that subprocess.run() chokes on.
+    output = utils.run_command(cmd, check=False)
 
     changed_lines = [
         line for line in output.split('\n')

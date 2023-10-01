@@ -24,14 +24,14 @@ def check_library_version(request, python_cmd, lib_name):
         if lib_name in line
     ]
 
-    print(f"\n*** Running tests with {lib_output}\n")
+    print(f"\n*** Running tests with {lib_output[0]}\n")
 
 
-def run_command(cmd):
+def run_command(cmd, check=True):
     """Run a command, and return the output."""
     cmd_parts = split(cmd)
     result = subprocess.run(cmd_parts,
-        capture_output=True, text=True, check=True)
+        capture_output=True, text=True, check=check)
 
     return result.stdout.strip()
 
