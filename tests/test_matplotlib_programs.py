@@ -46,7 +46,7 @@ def test_simple_plots(tmp_path, python_cmd, test_file):
 
     # Replace plt.show() with savefig().
     contents = dest_path.read_text()
-    save_cmd = "plt.savefig('output_file.png')"
+    save_cmd = "plt.savefig('output_file.png', metadata={'Software': ''})"
     contents = contents.replace('plt.show()', save_cmd)
     # Uncomment this to verify that comparison fails for incorrect image:
     # contents = contents.replace('16', '32')
@@ -94,7 +94,7 @@ def test_random_walk_program(tmp_path, python_cmd):
     # Unindent remaining lines.
     lines = [line.lstrip() for line in lines]
     # Add command to write image file.
-    save_cmd = "\nplt.savefig('output_file.png')"
+    save_cmd = "\nplt.savefig('output_file.png', metadata={'Software': ''})"
     lines.append(save_cmd)
     # Add lines to seed random number generator.
     lines.insert(0, 'import random')
@@ -153,7 +153,7 @@ def test_weather_program(tmp_path, python_cmd,
 
     # Write images instead of calling plt.show().
     contents = dest_path_py.read_text()
-    save_cmd = "plt.savefig('output_file.png')"
+    save_cmd = "plt.savefig('output_file.png', metadata={'Software': ''})"
     contents = contents.replace('plt.show()', save_cmd)
     dest_path_py.write_text(contents)
 
