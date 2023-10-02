@@ -14,6 +14,12 @@ def pytest_addoption(parser):
         help="Pygame version to test"
     )
 
+    parser.addoption(
+        "--matplotlib-version", action="store",
+        default=None,
+        help="Matplotlib version to test"
+    )
+
 
 @pytest.fixture(scope='session')
 def python_cmd():

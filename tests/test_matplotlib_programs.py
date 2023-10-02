@@ -20,6 +20,17 @@ import pytest
 import utils
 
 
+# ----- Fixtures -----
+
+@pytest.fixture(scope='module', autouse=True)
+def check_matplotlib_version(request, python_cmd):
+    """Check if the correct version of Matplotlib is installed."""
+    utils.check_library_version(request, python_cmd, 'matplotlib')
+
+
+# ----- Test functions -----
+
+
 simple_plots = [
     'chapter_15/plotting_simple_line_graph/mpl_squares.py',
     'chapter_15/plotting_simple_line_graph/scatter_squares.py',
