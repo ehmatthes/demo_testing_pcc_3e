@@ -27,18 +27,11 @@ Notes:
 """
 
 from pathlib import Path
-import subprocess
-from shlex import split
 import os
-import importlib
-import sys
 import shutil
 import filecmp
-import re
 
 import pytest
-from PIL import Image
-import numpy as np
 
 import utils
 
@@ -84,7 +77,7 @@ def test_die_program(tmp_path, python_cmd, test_file):
     # Verify the output file exists.
     output_path = tmp_path / output_filename
     assert output_path.exists()
-    
+
     reference_file_path = (Path(__file__).parent /
         'reference_files' / output_filename)
     assert filecmp.cmp(output_path, reference_file_path)
