@@ -157,6 +157,7 @@ def test_weather_program(tmp_path, python_cmd,
     # Print output file path, so it's easy to find images.
     print(f"\n***** {dest_path_py.name} output:", output_path)
 
+    # Check output image against reference file.
     reference_filename = dest_path_py.name.replace('.py', '.png')
     reference_file_path = (Path(__file__).parent
             / 'reference_files' / reference_filename)
