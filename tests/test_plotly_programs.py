@@ -38,6 +38,16 @@ import numpy as np
 import utils
 
 
+# ----- Fixtures -----
+
+@pytest.fixture(scope='module', autouse=True)
+def check_plotly_version(request, python_cmd):
+    """Check if the correct version of Plotly is installed."""
+    utils.check_library_version(request, python_cmd, 'plotly')
+
+
+# ----- Test functions -----
+
 die_programs = [
     'chapter_15/rolling_dice/die_visual.py',
     'chapter_15/rolling_dice/dice_visual.py',
@@ -225,7 +235,7 @@ def test_python_repos_visual(tmp_path, python_cmd):
         img = img.convert('RGB')
         data = np.array(img)
         mean_rgb = np.mean(data)
-        print("\n***** mean_rgb:", mean_rgb)
+        # print("\n***** mean_rgb:", mean_rgb)
 
     # As of 9/23/23, mean_rgb is 239.45.
     # Widen threshold if this fails with a valid image file.

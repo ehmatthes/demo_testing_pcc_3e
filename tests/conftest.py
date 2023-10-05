@@ -20,6 +20,12 @@ def pytest_addoption(parser):
         help="Matplotlib version to test"
     )
 
+    parser.addoption(
+        "--plotly-version", action="store",
+        default=None,
+        help="Plotly version to test"
+    )
+
 
 @pytest.fixture(scope='session')
 def python_cmd():

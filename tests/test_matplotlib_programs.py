@@ -30,7 +30,6 @@ def check_matplotlib_version(request, python_cmd):
 
 # ----- Test functions -----
 
-
 simple_plots = [
     'chapter_15/plotting_simple_line_graph/mpl_squares.py',
     'chapter_15/plotting_simple_line_graph/scatter_squares.py',
