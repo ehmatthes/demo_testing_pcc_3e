@@ -30,6 +30,7 @@ from pathlib import Path
 import os
 import shutil
 import filecmp
+import re
 
 import pytest
 
@@ -66,6 +67,14 @@ def test_die_program(tmp_path, python_cmd, test_file):
     save_cmd = f"fig.write_html('{output_filename}')"
     lines.append(save_cmd)
 
+    output_filename_nojs = output_filename.replace(
+            '.html', '_nojs.html')
+    save_cmd_nojs = (
+        f"\nfig.write_html('{output_filename_nojs}', "
+        "include_plotlyjs=False)"
+    )
+    lines.append(save_cmd_nojs)
+
     contents = '\n'.join(lines)
     dest_path.write_text(contents)
 
@@ -75,9 +84,19 @@ def test_die_program(tmp_path, python_cmd, test_file):
     output = utils.run_command(cmd)
 
     # Verify the output file exists.
-    output_path = tmp_path / output_filename
+    output_path = tmp_path / output_filename_nojs
     assert output_path.exists()
 
+    # There are three occurrences of a hash id. That id is used by js to 
+    #   target a div
+    #   `div id="25dba332-be8d-4a5d-8de4-f351acdb14fb"`
+    # Replace hash id with a static dummy id.
+    contents = output_path.read_text()
+    hash_id = re.search(r'div id="([a-f0-9\-]{36})"',
+            contents).group(1)
+    contents = contents.replace(hash_id, 'dummy-id')
+    output_path.write_text(contents)
+
     reference_file_path = (Path(__file__).parent /
-        'reference_files' / output_filename)
+        'reference_files' / output_filename_nojs)
     assert filecmp.cmp(output_path, reference_file_path)
