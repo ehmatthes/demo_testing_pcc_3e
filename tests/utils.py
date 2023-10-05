@@ -1,6 +1,7 @@
 """Utilities for pcc_3e tests."""
 import sys
 import subprocess
+import re
 from pathlib import Path
 from shlex import split
 
@@ -35,6 +36,7 @@ def run_command(cmd):
 
     return result.stdout.strip()
 
+
 def get_python_cmd():
     """Return the path to the venv Python interpreter."""
     if sys.platform == 'win32':
@@ -43,3 +45,15 @@ def get_python_cmd():
         python_cmd = Path(sys.prefix) / "bin/python"
 
     return python_cmd.as_posix()
+
+
+def replace_plotly_hash(path):
+    """Replace Plotly's unique hash ID with 'dummy-id'."""
+    # There are three occurrences of a hash id.
+    #   This id is used by js to target a div:
+    #   <div id="25dba332-be8d-4a5d-8de4-f351acdb14fb"...>
+    contents = path.read_text()
+    hash_id = re.search(r'div id="([a-f0-9\-]{36})"',
+            contents).group(1)
+    contents = contents.replace(hash_id, 'dummy-id')
+    path.write_text(contents)
