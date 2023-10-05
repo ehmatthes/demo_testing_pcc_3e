@@ -147,10 +147,8 @@ def test_eq_world_map(tmp_path, python_cmd):
     lines.insert(0, 'import random')
     lines.insert(6, 'random.seed(23)')
 
-    # Add the call to fig.write_html().
-    output_filename = path_py.name.replace('.py', '.html')
-    save_cmd = f"fig.write_html('{output_filename}')"
-    lines.append(save_cmd)
+    # Write HTML with and without plotly.js.
+    lines = utils.add_plotly_write_commands(path_py, lines)
 
     contents = '\n'.join(lines)
     dest_path_py.write_text(contents)
@@ -161,6 +159,7 @@ def test_eq_world_map(tmp_path, python_cmd):
     output = utils.run_command(cmd)
 
     # Verify the output file exists.
+    output_filename = path_py.name.replace('.py', '_nojs.html')
     output_path = tmp_path / output_filename
     assert output_path.exists()
     utils.replace_plotly_hash(output_path)
