@@ -75,10 +75,8 @@ def test_die_program(tmp_path, python_cmd, test_file):
     lines.insert(0, 'import random')
     lines.insert(5, 'random.seed(23)')
 
-    # Add the call to fig.write_html().
-    output_filename = path.name.replace('.py', '.html')
-    save_cmd = f"fig.write_html('{output_filename}')"
-    lines.append(save_cmd)
+    # Write HTML with and without plotly.js.
+    lines = utils.add_plotly_write_commands(path, lines)
 
     contents = '\n'.join(lines)
     dest_path.write_text(contents)
@@ -89,6 +87,7 @@ def test_die_program(tmp_path, python_cmd, test_file):
     output = utils.run_command(cmd)
 
     # Verify the output file exists.
+    output_filename = path.name.replace('.py', '_nojs.html')
     output_path = tmp_path / output_filename
     assert output_path.exists()
 
