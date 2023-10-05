@@ -67,14 +67,6 @@ def test_die_program(tmp_path, python_cmd, test_file):
     save_cmd = f"fig.write_html('{output_filename}')"
     lines.append(save_cmd)
 
-    output_filename_nojs = output_filename.replace(
-            '.html', '_nojs.html')
-    save_cmd_nojs = (
-        f"\nfig.write_html('{output_filename_nojs}', "
-        "include_plotlyjs=False)"
-    )
-    lines.append(save_cmd_nojs)
-
     contents = '\n'.join(lines)
     dest_path.write_text(contents)
 
@@ -84,7 +76,7 @@ def test_die_program(tmp_path, python_cmd, test_file):
     output = utils.run_command(cmd)
 
     # Verify the output file exists.
-    output_path = tmp_path / output_filename_nojs
+    output_path = tmp_path / output_filename
     assert output_path.exists()
 
     # There are three occurrences of a hash id. That id is used by js to 
@@ -98,5 +90,5 @@ def test_die_program(tmp_path, python_cmd, test_file):
     output_path.write_text(contents)
 
     reference_file_path = (Path(__file__).parent /
-        'reference_files' / output_filename_nojs)
+        'reference_files' / output_filename)
     assert filecmp.cmp(output_path, reference_file_path)
