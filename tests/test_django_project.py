@@ -72,9 +72,12 @@ def test_django_project(tmp_path, python_cmd):
     #   To verify it's not running after the test:
     #   `$ ps aux | grep runserver`
     # I may have other projects running on 8000; run this on 8008.
+    # Log to file, so we can verify we haven't connected to a
+    #   previous server process, or an unrelated one.
+    runserver_log = dest_dir / 'runserver_log.txt'
     cmd = f"{llenv_python_cmd} manage.py runserver 8008"
-    server_process = subprocess.Popen(cmd.split(),
-        stderr=subprocess.PIPE, text=True)
+    cmd += f" > {runserver_log} 2>&1"
+    server_process = subprocess.Popen(cmd, shell=True)
 
     # Wait until server is ready.
     url = 'http://localhost:8008/'
@@ -92,8 +95,14 @@ def test_django_project(tmp_path, python_cmd):
 
     # Verify connection.
     assert connected
-    # stderr_server = server_process.stderr.read()
-    # assert 'Error: That port is already in use' not in stderr_server
+
+    # Pause for log file to be written.
+    sleep(2)
+    log_text = runserver_log.read_text()
+    assert 'Error: That port is already in use' not in log_text
+    assert 'Watching for file changes with StatReloader' in log_text
+    assert '"GET / HTTP/1.1" 200' in log_text
+
 
 
 
