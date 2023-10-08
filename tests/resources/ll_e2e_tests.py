@@ -32,16 +32,11 @@ def run_e2e_test(app_url):
     url = f"{app_url}topics"
     r = requests.get(url)
 
-    try:
-        assert r.status_code == 200
-        assert "Log in to your account." in r.text
-        assert "Username" in r.text
-        assert "Password" in r.text
-    except AssertionError:
-        print("  *** AssertionError when accessing anonymous topics page.")
-        print("status_code:", r.status_code)
-        print("url", url)
-        # should be like: https://immense-headland-05838.herokuapp.com/topics
+    assert r.status_code == 200
+    assert "Log in to your account." in r.text
+    assert "Username" in r.text
+    assert "Password" in r.text
+        
 
     # --- Anonymous register page ---
     print("  Checking that anonymous register page is available...")
