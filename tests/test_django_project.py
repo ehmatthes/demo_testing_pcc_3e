@@ -44,7 +44,7 @@ def test_django_project(request, tmp_path, python_cmd):
         if django_version != "unpinned":
             django_req = f"Django=={django_version}"
             contents = contents.replace('Django', django_req)
-            
+
         req_path.write_text(contents)
 
     # Build a fresh venv for the project.
@@ -157,9 +157,7 @@ def test_django_project(request, tmp_path, python_cmd):
     cmd = f"{llenv_python_cmd} --version"
     python_version = utils.run_command(cmd)
 
-    msg = "\n\n-----"
-    msg += "\nTested Learning Log project using:"
-    msg += f"\n  {python_version}"
-    msg += f"\n  {django_version}"
-    msg += "\n-----"
+    msg = "\n***** Tested Learning Log project using:"
+    msg += f"\n*****   {python_version}"
+    msg += f"\n*****   {django_version}"
     print(msg)
