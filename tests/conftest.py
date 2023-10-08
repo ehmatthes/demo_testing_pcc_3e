@@ -26,6 +26,12 @@ def pytest_addoption(parser):
         help="Plotly version to test"
     )
 
+    parser.addoption(
+        "--django-version", action="store",
+        default=None,
+        help="Django version to test"
+    )
+
 
 @pytest.fixture(scope='session')
 def python_cmd():
