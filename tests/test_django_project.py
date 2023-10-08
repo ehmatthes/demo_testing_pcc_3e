@@ -121,9 +121,9 @@ def test_django_project(tmp_path, python_cmd):
     except subprocess.CalledProcessError as e:
         print("\n***** CalledProcessError raised during functionality tests.")
         # Copy e.stdout to output, for following assertions to run.
-        # Don't re-raise error, or 
+        # Don't re-raise error, or that's what's emphasized in failure output.
+        #   Want the focus to be on the actual assertion that failed.
         output = e.stdout
-        raise e
     finally:
         # Terminate the development server process.
         #   There will be several child processes, 
