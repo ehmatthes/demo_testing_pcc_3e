@@ -119,13 +119,11 @@ def test_django_project(tmp_path, python_cmd):
         cmd = f"{llenv_python_cmd} {func_test_path} http://localhost:8008/"
         output = utils.run_command(cmd)
     except subprocess.CalledProcessError as e:
-        # print("\n***** CalledProcessError raised during functionality tests.")
-        # print(e.stdout)
-        # print(e.stderr)
-        # # Copy e.stdout to output, for following assertions to run.
+        print("\n***** CalledProcessError raised during functionality tests.")
+        # Copy e.stdout to output, for following assertions to run.
+        # Don't re-raise error, or 
         output = e.stdout
-        # raise e
-        pass
+        raise e
     finally:
         # Terminate the development server process.
         #   There will be several child processes, 
