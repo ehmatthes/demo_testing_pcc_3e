@@ -18,6 +18,7 @@ from time import sleep
 import requests
 
 import utils
+from resources.ll_e2e_tests import run_e2e_test
 
 
 def test_django_project(tmp_path, python_cmd):
@@ -109,68 +110,13 @@ def test_django_project(tmp_path, python_cmd):
     assert 'Watching for file changes with StatReloader' in log_text
     assert '"GET / HTTP/1.1" 200' in log_text
 
-    # # Run functionality tests against the running project.
-    # func_test_path = (Path(__file__).parent / 'resources'
-    #         / 'll_project_functionality_tests.py')
-    # try:
-    #     # If this is not in a try block, the CalledProcessError on a failed
-    #     #   assertion in func_test_path prevents the server from being
-    #     #   terminated reliably.
-    #     cmd = f"{llenv_python_cmd} {func_test_path} http://localhost:8008/"
-    #     output = utils.run_command(cmd)
-    # except subprocess.CalledProcessError as e:
-    #     print("\n***** CalledProcessError raised during functionality tests.")
-    #     # Copy e.stdout to output, for following assertions to run.
-    #     # Don't re-raise error, or that's what's emphasized in failure output.
-    #     #   Want the focus to be on the actual assertion that failed.
-    #     output = e.stdout
-    # finally:
-    #     # Terminate the development server process.
-    #     #   There will be several child processes, 
-    #     #   so the process group needs to be terminated.
-    #     print("\n***** Stopping server...")
-    #     pgid = os.getpgid(server_process.pid)
-    #     os.killpg(pgid, signal.SIGTERM)
-    #     server_process.wait()
-
-    #     if server_process.poll() is None:
-    #         print("\n***** Server still running. PID:", server_process.pid)
-    #     else:
-    #         print("\n***** Server process terminated.")
-
-    # # These are individual assertions, so when it fails
-    # #   I can easily see which one failed.
-    # assert 'Testing functionality of deployed app...' in output
-    # assert '  Checking anonymous home page...' in output
-    # assert '  Checking that anonymous topics page redirects to login...' in output
-    # assert '  Checking that anonymous register page is available...' in output
-    # assert '  Checking that anonymous login page is available...' in output
-    # assert '  Checking that a user account can be made...' in output
-    # assert '  Checking that a new topic can be created...' in output
-    # assert '    Checking topics page as logged-in user...' in output
-    # assert '    Checking blank new_topic page as logged-in user...' in output
-    # assert '    Submitting post request for a new topic...' in output
-    # assert '    Checking topic page for topic that was just created...' in output
-    # assert '    Checking that a new entry can be made...' in output
-    # assert '      Checking blank new entry page...' in output
-    # assert '      Submitting post request for new entry...' in output
-    # assert '  All tested functionality works.' in output
-
-    from resources.ll_e2e_tests import run_e2e_test
-
+    # If e2e test is not run in a try block, a failed assertion will
+    #   prevent the server from being terminated correctly.
     try:
-        # If this is not in a try block, the CalledProcessError on a failed
-        #   assertion in func_test_path prevents the server from being
-        #   terminated reliably.
-        # cmd = f"{llenv_python_cmd} {func_test_path} http://localhost:8008/"
-        # output = utils.run_command(cmd)
         run_e2e_test('http://localhost:8008/')
     except subprocess.CalledProcessError as e:
-        print("\n***** CalledProcessError raised during functionality tests.")
-        # Copy e.stdout to output, for following assertions to run.
         # Don't re-raise error, or that's what's emphasized in failure output.
         #   Want the focus to be on the actual assertion that failed.
-        # output = e.stdout
         pass
     finally:
         # Terminate the development server process.
@@ -181,7 +127,9 @@ def test_django_project(tmp_path, python_cmd):
         os.killpg(pgid, signal.SIGTERM)
         server_process.wait()
 
+        # Print a message about the server status before exiting.
         if server_process.poll() is None:
-            print("\n***** Server still running. PID:", server_process.pid)
+            print("\n***** Server still running.")
+            print("*****   PID:", server_process.pid)
         else:
             print("\n***** Server process terminated.")
