@@ -114,10 +114,8 @@ def test_django_project(tmp_path, python_cmd):
     #   prevent the server from being terminated correctly.
     try:
         run_e2e_test('http://localhost:8008/')
-    except subprocess.CalledProcessError as e:
-        # Don't re-raise error, or that's what's emphasized in failure output.
-        #   Want the focus to be on the actual assertion that failed.
-        pass
+    except AssertionError as e:
+        raise e
     finally:
         # Terminate the development server process.
         #   There will be several child processes, 
