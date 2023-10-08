@@ -1,9 +1,5 @@
 """Test functionality of the LL project.
 Works for local and remote deployments.
-
-Usage notes:
-- Requires requests module.
-- $ python test_deployed_app_functionality.py http://localhost:8000/
 """
 
 from pathlib import Path
@@ -12,7 +8,7 @@ import sys, re
 import requests
 
 
-def run_func_test(app_url):
+def run_e2e_test(app_url):
     print("\nTesting functionality of deployed app...")
 
     # --- Anonymous home page ---
