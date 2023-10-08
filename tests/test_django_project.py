@@ -76,6 +76,7 @@ def test_django_project(tmp_path, python_cmd):
     # Log to file, so we can verify we haven't connected to a
     #   previous server process, or an unrelated one.
     #   shell=True is necessary for redirecting output.
+    #   start_new_session=True is required to terminate the process group.
     runserver_log = dest_dir / 'runserver_log.txt'
     cmd = f"{llenv_python_cmd} manage.py runserver 8008"
     cmd += f" > {runserver_log} 2>&1"
@@ -112,14 +113,19 @@ def test_django_project(tmp_path, python_cmd):
     func_test_path = (Path(__file__).parent / 'resources'
             / 'll_project_functionality_tests.py')
     try:
+        # If this is not in a try block, the CalledProcessError on a failed
+        #   assertion in func_test_path prevents the server from being
+        #   terminated reliably.
         cmd = f"{llenv_python_cmd} {func_test_path} http://localhost:8008/"
         output = utils.run_command(cmd)
     except subprocess.CalledProcessError as e:
-        print("\n***** CalledProcessError raised during functionality tests.")
-        print(e.stdout)
-        print(e.stderr)
-        # Copy e.stdout to output, for following assertions to run.
+        # print("\n***** CalledProcessError raised during functionality tests.")
+        # print(e.stdout)
+        # print(e.stderr)
+        # # Copy e.stdout to output, for following assertions to run.
         output = e.stdout
+        # raise e
+        pass
     finally:
         # Terminate the development server process.
         #   There will be several child processes, 
