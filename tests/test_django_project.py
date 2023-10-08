@@ -74,10 +74,12 @@ def test_django_project(tmp_path, python_cmd):
     # I may have other projects running on 8000; run this on 8008.
     # Log to file, so we can verify we haven't connected to a
     #   previous server process, or an unrelated one.
+    #   shell=True is necessary for redirecting output.
     runserver_log = dest_dir / 'runserver_log.txt'
     cmd = f"{llenv_python_cmd} manage.py runserver 8008"
     cmd += f" > {runserver_log} 2>&1"
-    server_process = subprocess.Popen(cmd, shell=True)
+    server_process = subprocess.Popen(cmd, shell=True,
+            start_new_session=True)
 
     # Wait until server is ready.
     url = 'http://localhost:8008/'
@@ -103,24 +105,53 @@ def test_django_project(tmp_path, python_cmd):
     assert 'Watching for file changes with StatReloader' in log_text
     assert '"GET / HTTP/1.1" 200' in log_text
 
+    # Run functionality tests against the runnig project.
+    func_test_path = (Path(__file__).parent / 'resources'
+            / 'll_project_functionality_tests.py')
+    try:
+        cmd = f"{llenv_python_cmd} {func_test_path} http://localhost:8008/"
+        output = utils.run_command(cmd)
+    except subprocess.CalledProcessError as e:
+        print("---- STDOUT ----")
+        print(e.stdout)
+        print("---- STDERR ----")
+        print(e.stderr)
+        # Copy e.stdout to output, for following assertions to run.
+        output = e.stdout
+    finally:
+        # Stop the development server.
+        print("\n***** Stopping server...")
 
+        import signal
+        # os.kill()?
+        # os.kill(server_process.pid, signal.SIGTERM)
+        # sleep(3)
 
+        pgid = os.getpgid(server_process.pid)
+        os.killpg(pgid, signal.SIGTERM)
 
-    # # Run functionality tests against the runnig project.
-    # func_test_path = (Path(__file__).parent / 'resources'
-    #         / 'll_project_functionality_tests.py')
-    # try:
-    #     cmd = f"{llenv_python_cmd} {func_test_path} http://localhost:8008/"
-    #     print("\n***** cmd:", cmd)
-    #     output = utils.run_command(cmd)
-    # except subprocess.CalledProcessError as e:
-    #     print("---- STDOUT ----")
-    #     print(e.stdout)
-    #     print("---- STDERR ----")
-    #     print(e.stderr)
-    #     # Copy e.stdout to output, for following assertions to run.
-    #     output = e.stdout
-    # finally:
-    #     # Stop the development server.
-    #     server_process.terminate()
-    #     server_process.wait()
+        # server_process.terminate()
+        server_process.wait()
+        # print("***** Server terminated.")
+
+        if server_process.poll() is None:
+            print("\n***** Server is still running. PID:", server_process.pid)
+        else:
+            print("\n***** Server process terminated.")
+
+    # These are individual assertions, so when it fails I can easily see which one failed.
+    assert 'Testing functionality of deployed app...' in output
+    assert '  Checking anonymous home page...' in output
+    assert '  Checking that anonymous topics page redirects to login...' in output
+    assert '  Checking that anonymous register page is available...' in output
+    assert '  Checking that anonymous login page is available...' in output
+    assert '  Checking that a user account can be made...' in output
+    assert '  Checking that a new topic can be created...' in output
+    assert '    Checking topics page as logged-in user...' in output
+    assert '    Checking blank new_topic page as logged-in user...' in output
+    assert '    Submitting post request for a new topic...' in output
+    assert '    Checking topic page for topic that was just created...' in output
+    assert '    Checking that a new entry can be made...' in output
+    assert '      Checking blank new entry page...' in output
+    assert '      Submitting post request for new entry...' in output
+    assert '  All tested functionality works.' in output
