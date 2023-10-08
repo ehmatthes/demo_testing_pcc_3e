@@ -8,8 +8,9 @@
 - Run functionality tests.
 """
 
-import shutil
 import os
+import shutil
+import signal
 import subprocess
 from pathlib import Path
 from time import sleep
@@ -70,7 +71,7 @@ def test_django_project(tmp_path, python_cmd):
 
     # Start development server.
     #   To verify it's not running after the test:
-    #   `$ ps aux | grep runserver`
+    #   macOS: `$ ps aux | grep runserver`
     # I may have other projects running on 8000; run this on 8008.
     # Log to file, so we can verify we haven't connected to a
     #   previous server process, or an unrelated one.
@@ -98,48 +99,43 @@ def test_django_project(tmp_path, python_cmd):
     # Verify connection.
     assert connected
 
+    # Verify connection was made to *this* server, not
+    #   a previous test run, or some other server on 8008.
     # Pause for log file to be written.
-    sleep(2)
+    sleep(1)
     log_text = runserver_log.read_text()
     assert 'Error: That port is already in use' not in log_text
     assert 'Watching for file changes with StatReloader' in log_text
     assert '"GET / HTTP/1.1" 200' in log_text
 
-    # Run functionality tests against the runnig project.
+    # Run functionality tests against the running project.
     func_test_path = (Path(__file__).parent / 'resources'
             / 'll_project_functionality_tests.py')
     try:
         cmd = f"{llenv_python_cmd} {func_test_path} http://localhost:8008/"
         output = utils.run_command(cmd)
     except subprocess.CalledProcessError as e:
-        print("---- STDOUT ----")
+        print("\n***** CalledProcessError raised during functionality tests.")
         print(e.stdout)
-        print("---- STDERR ----")
         print(e.stderr)
         # Copy e.stdout to output, for following assertions to run.
         output = e.stdout
     finally:
-        # Stop the development server.
+        # Terminate the development server process.
+        #   There will be several child processes, 
+        #   so the process group needs to be terminated.
         print("\n***** Stopping server...")
-
-        import signal
-        # os.kill()?
-        # os.kill(server_process.pid, signal.SIGTERM)
-        # sleep(3)
-
         pgid = os.getpgid(server_process.pid)
         os.killpg(pgid, signal.SIGTERM)
-
-        # server_process.terminate()
         server_process.wait()
-        # print("***** Server terminated.")
 
         if server_process.poll() is None:
-            print("\n***** Server is still running. PID:", server_process.pid)
+            print("\n***** Server still running. PID:", server_process.pid)
         else:
             print("\n***** Server process terminated.")
 
-    # These are individual assertions, so when it fails I can easily see which one failed.
+    # These are individual assertions, so when it fails
+    #   I can easily see which one failed.
     assert 'Testing functionality of deployed app...' in output
     assert '  Checking anonymous home page...' in output
     assert '  Checking that anonymous topics page redirects to login...' in output
