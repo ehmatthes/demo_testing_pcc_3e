@@ -130,19 +130,12 @@ def run_e2e_tests(dest_dir, llenv_python_cmd):
       the e2e tests, then shut down the server. This needs
       to work on macOS and Windows.
     """
-    # Start development server.
-    #   To verify it's not running after the test:
-    #   macOS: `$ ps aux | grep runserver`
-    # I may have other projects running on 8000; run this on 8008.
+
     # Log to file, so we can verify we haven't connected to a
     #   previous server process, or an unrelated one.
-    #   shell=True is necessary for redirecting output.
-    #   start_new_session=True is required to terminate the process group.
-    runserver_log = dest_dir / 'runserver_log.txt'
-    cmd = f"{llenv_python_cmd} manage.py runserver 8008"
-    cmd += f" > {runserver_log} 2>&1"
-    server_process = subprocess.Popen(cmd, shell=True,
-            start_new_session=True)
+    log_path = dest_dir / 'runserver_log.txt'
+
+    server_process = start_server(llenv_python_cmd, log_path)
 
     # Wait until server is ready.
     url = 'http://localhost:8008/'
@@ -165,7 +158,7 @@ def run_e2e_tests(dest_dir, llenv_python_cmd):
     #   a previous test run, or some other server on 8008.
     # Pause for log file to be written.
     sleep(1)
-    log_text = runserver_log.read_text()
+    log_text = log_path.read_text()
     assert 'Error: That port is already in use' not in log_text
     assert 'Watching for file changes with StatReloader' in log_text
     assert '"GET / HTTP/1.1" 200' in log_text
@@ -191,6 +184,23 @@ def run_e2e_tests(dest_dir, llenv_python_cmd):
             print("*****   PID:", server_process.pid)
         else:
             print("\n***** Server process terminated.")
+
+
+def start_server(llenv_python_cmd, log_path):
+    """Start the dev server for e2e tests."""
+    # Start development server.
+    #   To verify it's not running after the test:
+    #   macOS: `$ ps aux | grep runserver`
+    # I may have other projects running on 8000; run this on 8008.
+    #   shell=True is necessary for redirecting output.
+    #   start_new_session=True is required to terminate the process group.
+    cmd = f"{llenv_python_cmd} manage.py runserver 8008"
+    cmd += f" > {log_path} 2>&1"
+    server_process = subprocess.Popen(cmd, shell=True,
+            start_new_session=True)
+
+    return server_process
+
 
 def show_versions(llenv_python_cmd):
     """Show what versions of Python and Django were used."""
