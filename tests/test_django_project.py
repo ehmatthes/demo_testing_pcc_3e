@@ -138,32 +138,6 @@ def run_e2e_tests(dest_dir, llenv_python_cmd):
     server_process = start_server(llenv_python_cmd, log_path)
     check_server_ready(log_path)
 
-    # # Wait until server is ready.
-    # url = 'http://localhost:8008/'
-    # connected = False
-    # attempts, max_attempts = 1, 50
-    # while attempts < max_attempts:
-    #     try:
-    #         r = requests.get(url)
-    #         if r.status_code == 200:
-    #             connected = True
-    #             break
-    #     except requests.ConnectionError:
-    #         attempts += 1
-    #         sleep(0.2)
-
-    # # Verify connection.
-    # assert connected
-
-    # # Verify connection was made to *this* server, not
-    # #   a previous test run, or some other server on 8008.
-    # # Pause for log file to be written.
-    # sleep(1)
-    # log_text = log_path.read_text()
-    # assert 'Error: That port is already in use' not in log_text
-    # assert 'Watching for file changes with StatReloader' in log_text
-    # assert '"GET / HTTP/1.1" 200' in log_text
-
     # If e2e test is not run in a try block, a failed assertion will
     #   prevent the server from being terminated correctly.
     try:
