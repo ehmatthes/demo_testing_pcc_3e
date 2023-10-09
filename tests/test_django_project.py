@@ -35,32 +35,7 @@ def test_django_project(request, tmp_path, python_cmd):
     modify_requirements(request, dest_dir)
 
     # Build a fresh venv for the project.
-    cmd = f"{python_cmd} -m venv ll_env"
-    output = utils.run_command(cmd)
-    assert output == ''
-
-    # Get python command from ll_env.
-    llenv_python_cmd = (dest_dir
-            / 'll_env' / 'bin' / 'python')
-
-    # Run `pip freeze` to prove we're in a fresh venv.
-    cmd = f"{llenv_python_cmd} -m pip freeze"
-    output = utils.run_command(cmd)
-    assert output == ''
-
-    # Install requirements, and requests for testing.
-    cmd = f"{llenv_python_cmd} -m pip install -r requirements.txt"
-    output = utils.run_command(cmd)
-    cmd = f"{llenv_python_cmd} -m pip install requests"
-    output = utils.run_command(cmd)
-
-    # Run `pip freeze` again, verify installations.
-    cmd = f"{llenv_python_cmd} -m pip freeze"
-    output = utils.run_command(cmd)
-    assert "Django==" in output
-    assert "django-bootstrap5==" in output
-    assert "platformshconfig==" in output
-    assert "requests==" in output
+    llenv_python_cmd = build_venv(python_cmd, dest_dir)
 
     # Make migrations, call check.
     cmd = f"{llenv_python_cmd} manage.py migrate"
@@ -181,3 +156,35 @@ def modify_requirements(request, dest_dir):
         contents = contents.replace('Django', django_req)
 
     req_path.write_text(contents)
+
+
+def build_venv(python_cmd, dest_dir):
+    """Build a venv just for this test run."""
+    cmd = f"{python_cmd} -m venv ll_env"
+    output = utils.run_command(cmd)
+    assert output == ''
+
+    # Get python command from ll_env.
+    llenv_python_cmd = (dest_dir
+            / 'll_env' / 'bin' / 'python')
+
+    # Run `pip freeze` to prove we're in a fresh venv.
+    cmd = f"{llenv_python_cmd} -m pip freeze"
+    output = utils.run_command(cmd)
+    assert output == ''
+
+    # Install requirements, and requests for testing.
+    cmd = f"{llenv_python_cmd} -m pip install -r requirements.txt"
+    output = utils.run_command(cmd)
+    cmd = f"{llenv_python_cmd} -m pip install requests"
+    output = utils.run_command(cmd)
+
+    # Run `pip freeze` again, verify installations.
+    cmd = f"{llenv_python_cmd} -m pip freeze"
+    output = utils.run_command(cmd)
+    assert "Django==" in output
+    assert "django-bootstrap5==" in output
+    assert "platformshconfig==" in output
+    assert "requests==" in output
+
+    return llenv_python_cmd
