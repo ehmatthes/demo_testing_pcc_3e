@@ -9,12 +9,14 @@
 """
 
 import os
+import platform
 import shutil
 import signal
 import subprocess
 from pathlib import Path
 from time import sleep
 
+import psutil
 import requests
 
 import utils
@@ -82,6 +84,7 @@ def modify_requirements(request, dest_dir):
 
 def build_venv(python_cmd, dest_dir):
     """Build a venv just for this test run."""
+    print("\n***** Building venv for test...")
     cmd = f"{python_cmd} -m venv ll_env"
     output = utils.run_command(cmd)
     assert output == ''
@@ -89,6 +92,9 @@ def build_venv(python_cmd, dest_dir):
     # Get python command from ll_env.
     llenv_python_cmd = (dest_dir
             / 'll_env' / 'bin' / 'python')
+    if platform.system() == 'Windows':
+        llenv_python_cmd = (dest_dir / 'll_env'
+            / 'Scripts' / 'python.exe').as_posix()
 
     # Run `pip freeze` to prove we're in a fresh venv.
     cmd = f"{llenv_python_cmd} -m pip freeze"
@@ -130,7 +136,7 @@ def run_e2e_tests(dest_dir, llenv_python_cmd):
       the e2e tests, then shut down the server. This needs
       to work on macOS and Windows.
     """
-
+    print("***** Running e2e tests...")
     # Log to file, so we can verify we haven't connected to a
     #   previous server process, or an unrelated one.
     log_path = dest_dir / 'runserver_log.txt'
@@ -149,9 +155,14 @@ def run_e2e_tests(dest_dir, llenv_python_cmd):
 
 def start_server(llenv_python_cmd, log_path):
     """Start the dev server for e2e tests."""
+    print("***** Starting server...")
     # Start development server.
     #   To verify it's not running after the test:
     #   macOS: `$ ps aux | grep runserver`
+    #   Windows: Resource Monitor > python.exe
+    #      Associated Handles > runserver
+    #      > tasklist | findstr "python"
+    #      > taskkill /F /PID <pid>
     # I may have other projects running on 8000; run this on 8008.
     #   shell=True is necessary for redirecting output.
     #   start_new_session=True is required to terminate the process group.
@@ -160,6 +171,7 @@ def start_server(llenv_python_cmd, log_path):
     server_process = subprocess.Popen(cmd, shell=True,
             start_new_session=True)
 
+    print(f"*****   PID: {server_process.pid}")
     return server_process
 
 
@@ -169,7 +181,7 @@ def check_server_ready(log_path):
     Verify the response is from the server we just started,
       not some other server.
     """
-
+    print("***** Checking server...")
     # Wait until server is ready.
     url = 'http://localhost:8008/'
     connected = False
@@ -199,13 +211,16 @@ def check_server_ready(log_path):
 
 def stop_server(server_process):
     """Terminate the development server process.
-    There will be several child processes, 
-      so the process group needs to be terminated.
+    The main process will spawn children and maybe
+      grandchildren. Terminate all these processes.
     """
     print("\n***** Stopping server...")
-    pgid = os.getpgid(server_process.pid)
-    os.killpg(pgid, signal.SIGTERM)
-    server_process.wait()
+    if platform.system() == "Windows":
+        stop_server_win(server_process)
+    else:
+        pgid = os.getpgid(server_process.pid)
+        os.killpg(pgid, signal.SIGTERM)
+        server_process.wait()
 
     # Print a message about the server status before exiting.
     if server_process.poll() is None:
@@ -213,6 +228,20 @@ def stop_server(server_process):
         print("*****   PID:", server_process.pid)
     else:
         print("\n***** Server process terminated.")
+
+
+def stop_server_win(server_process):
+    """Stop server processes on Windows.
+    Get the main process, then all children and grandchildren,
+      and terminate all processes.
+    """
+    main_proc = psutil.Process(server_process.pid)
+    child_procs = main_proc.children(recursive=True)
+
+    for proc in child_procs:
+        proc.terminate()
+
+    main_proc.terminate()
 
 
 def show_versions(llenv_python_cmd):
