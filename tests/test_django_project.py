@@ -41,67 +41,7 @@ def test_django_project(request, tmp_path, python_cmd):
     migrate_project(llenv_python_cmd)
     check_project(llenv_python_cmd)
 
-    # Start development server.
-    #   To verify it's not running after the test:
-    #   macOS: `$ ps aux | grep runserver`
-    # I may have other projects running on 8000; run this on 8008.
-    # Log to file, so we can verify we haven't connected to a
-    #   previous server process, or an unrelated one.
-    #   shell=True is necessary for redirecting output.
-    #   start_new_session=True is required to terminate the process group.
-    runserver_log = dest_dir / 'runserver_log.txt'
-    cmd = f"{llenv_python_cmd} manage.py runserver 8008"
-    cmd += f" > {runserver_log} 2>&1"
-    server_process = subprocess.Popen(cmd, shell=True,
-            start_new_session=True)
-
-    # Wait until server is ready.
-    url = 'http://localhost:8008/'
-    connected = False
-    attempts, max_attempts = 1, 50
-    while attempts < max_attempts:
-        try:
-            r = requests.get(url)
-            if r.status_code == 200:
-                connected = True
-                break
-        except requests.ConnectionError:
-            attempts += 1
-            sleep(0.2)
-
-    # Verify connection.
-    assert connected
-
-    # Verify connection was made to *this* server, not
-    #   a previous test run, or some other server on 8008.
-    # Pause for log file to be written.
-    sleep(1)
-    log_text = runserver_log.read_text()
-    assert 'Error: That port is already in use' not in log_text
-    assert 'Watching for file changes with StatReloader' in log_text
-    assert '"GET / HTTP/1.1" 200' in log_text
-
-    # If e2e test is not run in a try block, a failed assertion will
-    #   prevent the server from being terminated correctly.
-    try:
-        run_e2e_test('http://localhost:8008/')
-    except AssertionError as e:
-        raise e
-    finally:
-        # Terminate the development server process.
-        #   There will be several child processes, 
-        #   so the process group needs to be terminated.
-        print("\n***** Stopping server...")
-        pgid = os.getpgid(server_process.pid)
-        os.killpg(pgid, signal.SIGTERM)
-        server_process.wait()
-
-        # Print a message about the server status before exiting.
-        if server_process.poll() is None:
-            print("\n***** Server still running.")
-            print("*****   PID:", server_process.pid)
-        else:
-            print("\n***** Server process terminated.")
+    run_e2e_tests(dest_dir, llenv_python_cmd)
 
     # Show what versions of Python and Django were used.
     show_versions(llenv_python_cmd)
@@ -183,6 +123,74 @@ def check_project(llenv_python_cmd):
     output = utils.run_command(cmd)
     assert "System check identified no issues (0 silenced)." in output
 
+
+def run_e2e_tests(dest_dir, llenv_python_cmd):
+    """Run e2e tests against the running project.
+    This has to start a dev server, keep it running through
+      the e2e tests, then shut down the server. This needs
+      to work on macOS and Windows.
+    """
+    # Start development server.
+    #   To verify it's not running after the test:
+    #   macOS: `$ ps aux | grep runserver`
+    # I may have other projects running on 8000; run this on 8008.
+    # Log to file, so we can verify we haven't connected to a
+    #   previous server process, or an unrelated one.
+    #   shell=True is necessary for redirecting output.
+    #   start_new_session=True is required to terminate the process group.
+    runserver_log = dest_dir / 'runserver_log.txt'
+    cmd = f"{llenv_python_cmd} manage.py runserver 8008"
+    cmd += f" > {runserver_log} 2>&1"
+    server_process = subprocess.Popen(cmd, shell=True,
+            start_new_session=True)
+
+    # Wait until server is ready.
+    url = 'http://localhost:8008/'
+    connected = False
+    attempts, max_attempts = 1, 50
+    while attempts < max_attempts:
+        try:
+            r = requests.get(url)
+            if r.status_code == 200:
+                connected = True
+                break
+        except requests.ConnectionError:
+            attempts += 1
+            sleep(0.2)
+
+    # Verify connection.
+    assert connected
+
+    # Verify connection was made to *this* server, not
+    #   a previous test run, or some other server on 8008.
+    # Pause for log file to be written.
+    sleep(1)
+    log_text = runserver_log.read_text()
+    assert 'Error: That port is already in use' not in log_text
+    assert 'Watching for file changes with StatReloader' in log_text
+    assert '"GET / HTTP/1.1" 200' in log_text
+
+    # If e2e test is not run in a try block, a failed assertion will
+    #   prevent the server from being terminated correctly.
+    try:
+        run_e2e_test('http://localhost:8008/')
+    except AssertionError as e:
+        raise e
+    finally:
+        # Terminate the development server process.
+        #   There will be several child processes, 
+        #   so the process group needs to be terminated.
+        print("\n***** Stopping server...")
+        pgid = os.getpgid(server_process.pid)
+        os.killpg(pgid, signal.SIGTERM)
+        server_process.wait()
+
+        # Print a message about the server status before exiting.
+        if server_process.poll() is None:
+            print("\n***** Server still running.")
+            print("*****   PID:", server_process.pid)
+        else:
+            print("\n***** Server process terminated.")
 
 def show_versions(llenv_python_cmd):
     """Show what versions of Python and Django were used."""
