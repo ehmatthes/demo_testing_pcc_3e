@@ -104,20 +104,7 @@ def test_django_project(request, tmp_path, python_cmd):
             print("\n***** Server process terminated.")
 
     # Show what versions of Python and Django were used.
-    cmd = f"{llenv_python_cmd} -m pip freeze"
-    output = utils.run_command(cmd)
-
-    lines = output.splitlines()
-    django_version = [l for l in lines if 'Django' in l][0]
-    django_version = django_version.replace('==', ' ')
-
-    cmd = f"{llenv_python_cmd} --version"
-    python_version = utils.run_command(cmd)
-
-    msg = "\n***** Tested Learning Log project using:"
-    msg += f"\n*****   {python_version}"
-    msg += f"\n*****   {django_version}"
-    print(msg)
+    show_versions(llenv_python_cmd)
 
 
 # --- Helper functions ---
@@ -195,3 +182,21 @@ def check_project(llenv_python_cmd):
     cmd = f"{llenv_python_cmd} manage.py check"
     output = utils.run_command(cmd)
     assert "System check identified no issues (0 silenced)." in output
+
+
+def show_versions(llenv_python_cmd):
+    """Show what versions of Python and Django were used."""
+    cmd = f"{llenv_python_cmd} -m pip freeze"
+    output = utils.run_command(cmd)
+
+    lines = output.splitlines()
+    django_version = [l for l in lines if 'Django' in l][0]
+    django_version = django_version.replace('==', ' ')
+
+    cmd = f"{llenv_python_cmd} --version"
+    python_version = utils.run_command(cmd)
+
+    msg = "\n***** Tested Learning Log project using:"
+    msg += f"\n*****   {python_version}"
+    msg += f"\n*****   {django_version}"
+    print(msg)
