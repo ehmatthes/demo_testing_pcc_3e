@@ -8,7 +8,7 @@ import sys, re
 import requests
 
 
-def run_e2e_test(app_url):
+def e2e_test(app_url):
     print("\nTesting functionality of deployed app...")
 
     # --- Anonymous home page ---

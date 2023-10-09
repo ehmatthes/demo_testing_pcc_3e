@@ -18,7 +18,7 @@ from time import sleep
 import requests
 
 import utils
-from resources.ll_e2e_tests import run_e2e_test
+from resources.ll_e2e_tests import e2e_test
 from resources.migration_output import migration_output
 
 
@@ -134,31 +134,17 @@ def run_e2e_tests(dest_dir, llenv_python_cmd):
     # Log to file, so we can verify we haven't connected to a
     #   previous server process, or an unrelated one.
     log_path = dest_dir / 'runserver_log.txt'
-
     server_process = start_server(llenv_python_cmd, log_path)
     check_server_ready(log_path)
 
     # If e2e test is not run in a try block, a failed assertion will
     #   prevent the server from being terminated correctly.
     try:
-        run_e2e_test('http://localhost:8008/')
+        e2e_test('http://localhost:8008/')
     except AssertionError as e:
         raise e
     finally:
-        # Terminate the development server process.
-        #   There will be several child processes, 
-        #   so the process group needs to be terminated.
-        print("\n***** Stopping server...")
-        pgid = os.getpgid(server_process.pid)
-        os.killpg(pgid, signal.SIGTERM)
-        server_process.wait()
-
-        # Print a message about the server status before exiting.
-        if server_process.poll() is None:
-            print("\n***** Server still running.")
-            print("*****   PID:", server_process.pid)
-        else:
-            print("\n***** Server process terminated.")
+        stop_server(server_process)
 
 
 def start_server(llenv_python_cmd, log_path):
@@ -209,6 +195,24 @@ def check_server_ready(log_path):
     assert 'Error: That port is already in use' not in log_text
     assert 'Watching for file changes with StatReloader' in log_text
     assert '"GET / HTTP/1.1" 200' in log_text
+
+
+def stop_server(server_process):
+    """Terminate the development server process.
+    There will be several child processes, 
+      so the process group needs to be terminated.
+    """
+    print("\n***** Stopping server...")
+    pgid = os.getpgid(server_process.pid)
+    os.killpg(pgid, signal.SIGTERM)
+    server_process.wait()
+
+    # Print a message about the server status before exiting.
+    if server_process.poll() is None:
+        print("\n***** Server still running.")
+        print("*****   PID:", server_process.pid)
+    else:
+        print("\n***** Server process terminated.")
 
 
 def show_versions(llenv_python_cmd):
