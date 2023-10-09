@@ -25,27 +25,14 @@ def test_django_project(request, tmp_path, python_cmd):
     """Test the Learning Log project."""
 
     # Copy project to temp dir.
-    src_dir = (Path(__file__).parents[1] / 'chapter_20'
-            / 'deploying_learning_log')
     dest_dir = tmp_path / 'learning_log'
-    shutil.copytree(src_dir, dest_dir)
+    copy_to_temp_dir(dest_dir)
 
     # All remaining work needs to be done in dest_dir.
     os.chdir(dest_dir)
 
-    # Unpin requirements if appropriate.
-    django_version = request.config.getoption("--django-version")
-
-    if django_version is not None:
-        print('\n***** Unpinning versions from requirements.txt')
-        req_path = dest_dir / 'requirements.txt'
-        contents = "Django\ndjango-bootstrap5\nplatformshconfig\n"
-
-        if django_version != "unpinned":
-            django_req = f"Django=={django_version}"
-            contents = contents.replace('Django', django_req)
-
-        req_path.write_text(contents)
+    # Process --django-version CLI arg.
+    modify_requirements(request, dest_dir)
 
     # Build a fresh venv for the project.
     cmd = f"{python_cmd} -m venv ll_env"
@@ -161,3 +148,36 @@ def test_django_project(request, tmp_path, python_cmd):
     msg += f"\n*****   {python_version}"
     msg += f"\n*****   {django_version}"
     print(msg)
+
+
+# --- Helper functions ---
+
+def copy_to_temp_dir(dest_dir):
+    # Copy project to temp dir.
+    src_dir = (Path(__file__).parents[1] / 'chapter_20'
+            / 'deploying_learning_log')
+    shutil.copytree(src_dir, dest_dir)
+
+
+def modify_requirements(request, dest_dir):
+    """Modify requirements.txt based on --django-version."""
+
+    # Unpin requirements if appropriate.
+    django_version = request.config.getoption("--django-version")
+
+    if django_version is None:
+        return
+
+    # --django-version is 'unpinned' or a specific version.
+    #   Unpin requirements for both of these cases.
+    print('\n***** Unpinning versions from requirements.txt')
+    req_path = dest_dir / 'requirements.txt'
+    contents = "Django\ndjango-bootstrap5\nplatformshconfig\n"
+
+    # If --django-version is not unpinned, then it's a 
+    #   specific version that we need to set.
+    if django_version != "unpinned":
+        django_req = f"Django=={django_version}"
+        contents = contents.replace('Django', django_req)
+
+    req_path.write_text(contents)
