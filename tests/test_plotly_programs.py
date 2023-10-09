@@ -178,7 +178,7 @@ def test_python_repos_py(python_cmd):
     """
     path = (Path(__file__).parents[1] / 'chapter_17'
         / 'python_repos.py')
-    cmd = f"{python_cmd} {path}"
+    cmd = f"{python_cmd} {path.as_posix()}"
     output = utils.run_command(cmd)
 
     assert "Status code: 200" in output
@@ -250,7 +250,7 @@ def test_hn_article(python_cmd):
       stable information.
     """
     path = Path(__file__).parent.parent / 'chapter_17' / 'hn_article.py'
-    cmd = f"{python_cmd} {path}"
+    cmd = f"{python_cmd} {path.as_posix()}"
     output = utils.run_command(cmd)
 
     assert 'Status code: 200\n{\n    "by": "sohkamyung",\n    "descendants":' in output
